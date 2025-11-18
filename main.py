@@ -1,8 +1,11 @@
 import os
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
+from database import create_document
+from schemas import Contactmessage
 
-app = FastAPI()
+app = FastAPI(title="Personal Website API")
 
 app.add_middleware(
     CORSMiddleware,
@@ -63,6 +66,15 @@ def test_database():
     response["database_name"] = "✅ Set" if os.getenv("DATABASE_NAME") else "❌ Not Set"
     
     return response
+
+# Contact endpoint to store messages
+@app.post("/api/contact")
+def submit_contact(payload: Contactmessage):
+    try:
+        inserted_id = create_document("contactmessage", payload)
+        return {"status": "ok", "id": inserted_id}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 if __name__ == "__main__":
